@@ -158,7 +158,7 @@ Base.eltype( ::Type{ T } ) where { T <: unknown_length_sequence{Eltype} } where 
 struct Test_Range <: known_length_sequence{Int}
 	n
 end
-Base.iterate( r::Test_Range, state = 0 ) = (state, state+1)
+Base.iterate( r::Test_Range, state = 0 ) = state < r.n ? (state, state+1) : nothing
 Base.length( r::Test_Range ) = r.n
 
 # This iterator should run forever:
@@ -196,6 +196,8 @@ function info( s, n = 20 ; print_state = false )
 	end
 
 	y = iterate(s)
+	@show y
+
 	# i is counting the number of times that iterate() has been called (including the first call without existing state)
 	# i is counting the number of values that have been returned
 	i = 1
@@ -216,13 +218,7 @@ function info( s, n = 20 ; print_state = false )
 		end
 		print( "\n" )
 
-		if reduce_HasShape1_to_HasLength(Base.IteratorSize( typeof(s) )) == Base.HasLength() && i >= Base.length(s)
-			# respect the declared finite length:
-			break
-		end
 
-		y = iterate(s, state)
-		i = i+1
 
 		if y === nothing
 			println( "Sequence ended with iterate() returning nothing")
@@ -236,6 +232,17 @@ function info( s, n = 20 ; print_state = false )
 			end
 			break  # sequence ended with nothing
 		end
+
+		if reduce_HasShape1_to_HasLength(Base.IteratorSize( typeof(s) )) == Base.HasLength() && i >= Base.length(s)
+			# respect the declared finite length:
+			break
+		end
+
+		y = iterate(s, state)
+		i = i+1
+
+		@show y
+
 	end
 end
 
