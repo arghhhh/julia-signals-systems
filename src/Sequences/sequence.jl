@@ -28,16 +28,11 @@ Base.size( it::Sequence{A} ) where {A} = Base.size( it.a )
 
 # making sequences:
 
-# base case - single argument
 sequence( x ) = Sequence( x )         # wrap x with Sequence{}
 sequence( x::abstract_sequence ) = x  # unless it is already an abstract_sequence
 sequence( x::Number ) = Sequence( Base.Iterators.repeated(x) ) # scalars become infinite sequences
 sequence( x::Tuple  ) = Sequence( Base.Iterators.repeated(x) ) # repeat tuples rather than iterating through the tuple values
 
-# multiple arg sequence() concatenates sequences
-# this is not promoting arguments to Sequence - relying entirely on Julia library function flatten
-# the result is wrapped in Sequence though
-sequence( a, rest... ) = Sequence( Iterators.flatten( ( a, rest... ) ) )
 
 # Arithmetic Binary Operations
 # ----------------------------
@@ -196,7 +191,6 @@ function info( s, n = 20 ; print_state = false )
 	end
 
 	y = iterate(s)
-	@show y
 
 	# i is counting the number of times that iterate() has been called (including the first call without existing state)
 	# i is counting the number of values that have been returned
@@ -240,9 +234,6 @@ function info( s, n = 20 ; print_state = false )
 
 		y = iterate(s, state)
 		i = i+1
-
-		@show y
-
 	end
 end
 

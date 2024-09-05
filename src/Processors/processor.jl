@@ -26,3 +26,5 @@ end
 # or composing with another processor:
 (c::Compose)( in                     ) = c.p2( c.p1( in ) )
 (c::Compose)( p1::abstract_processor ) = Compose( p1, c )
+
+
