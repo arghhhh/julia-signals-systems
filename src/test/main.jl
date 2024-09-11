@@ -50,6 +50,12 @@ y = ( impulse
 
 plot(y, line=:stem, marker=:circle )
 
+impulse = concatenate( zeros(10), 1.0, sequence(0.0) )
+
+sys = fir( ones(10) ) |> fir( ones(10) ) |> fir( ones(10) ) |> fir( ones(10) ) 
+
+y3 = impulse |> sys |> Take(100) |> collect
+
 
 impulse = concatenate( zeros(Int64,10), 1, sequence(0) )
 y = ( impulse 
