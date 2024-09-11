@@ -2,15 +2,15 @@
 abstract type abstract_processor end
 
 # this defines the iterator formed by applying "in" to the the processor "p":
-struct Apply{T_iter,T_proc}
-        in::T_iter
-        p::T_proc
+struct Apply{Iter,Processor}
+        in::Iter
+        p::Processor
 end
 
 # this defines a composition of two processors:
-struct Compose{P1,P2} <: abstract_processor
-        p1::P1
-        p2::P2
+struct Compose{Processor1,Processor2} <: abstract_processor
+        p1::Processor1
+        p2::Processor2
 end
 
 # the normal way to construct Apply{} and Compose{} is through pipe "|>" notation
@@ -27,4 +27,4 @@ end
 (c::Compose)( in                     ) = c.p2( c.p1( in ) )
 (c::Compose)( p1::abstract_processor ) = Compose( p1, c )
 
-
+# Could consider using ComposedFunction defined in julia/base/operators.jl​

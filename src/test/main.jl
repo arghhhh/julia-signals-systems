@@ -6,7 +6,7 @@ using Plots
 
 # bring the following names into scope:
 import Sequences:  Sequences, Test_Range, concatenate, info, sequence
-import Processors: Processors, Downsample, Upsample, Vectorize, Take, fir
+import Processors: Processors, Downsample, Upsample, Vectorize, Take, fir, Map, MapT, Integrator
 
 Test_Range(10) |> info
 Test_Range(10) |> collect
@@ -39,12 +39,57 @@ concatenate( zeros(10), 1.0, sequence(0.0) ) |> Take(15) |> info
 
 impulse = concatenate( zeros(10), 1.0, sequence(0.0) )
 
-( impulse 
-	|> Take(30) 
-	|> fir( [1,1,1,1] ) 
-	|> fir( [1,1,1,1] ) 
-	|> fir( [1,1,1,1] ) 
-	|> fir( [1,1,1,1] ) 
+y = ( impulse 
+	|> Take(100) 
+	|> fir( ones(10) ) 
+	|> fir( ones(10) ) 
+	|> fir( ones(10) ) 
+	|> fir( ones(10) ) 
+	|> collect
+)
+
+plot(y, line=:stem, marker=:circle )
+
+
+impulse = concatenate( zeros(Int64,10), 1, sequence(0) )
+y = ( impulse 
+	|> Take(100) 
+	|> Integrator(1)
+	|> Integrator(1)
+	|> Integrator(1)
+	|> Integrator(1)
+	|> fir( [1,0,0,0,0,0,0,0,0,0,-1])
+	|> fir( [1,0,0,0,0,0,0,0,0,0,-1])
+	|> fir( [1,0,0,0,0,0,0,0,0,0,-1])
+	|> fir( [1,0,0,0,0,0,0,0,0,0,-1])
+	|> collect
+)
+
+y1 = ( impulse 
+	|> Take(100) 
+	|> Integrator(1)
+	|> Integrator(1)
+	|> Integrator(1)
+	|> Integrator(1)
+	|> fir( [1,0,0,0,0,0,0,0,0,0,-1])
+	|> fir( [1,0,0,0,0,0,0,0,0,0,-1])
+	|> fir( [1,0,0,0,0,0,0,0,0,0,-1])
+	|> fir( [1,0,0,0,0,0,0,0,0,0,-1])
+	|> Downsample(10)
+	|> collect
+)
+
+y2 = ( impulse 
+	|> Take(100) 
+	|> Integrator(1)
+	|> Integrator(1)
+	|> Integrator(1)
+	|> Integrator(1)
+	|> Downsample(10)
+	|> fir( [1,-1])
+	|> fir( [1,-1])
+	|> fir( [1,-1])
+	|> fir( [1,-1])
 	|> collect
 )
 
