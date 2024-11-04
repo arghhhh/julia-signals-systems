@@ -99,4 +99,4 @@ y2 = ( impulse
 	|> collect
 )
 
-
+@test 1:6 |> Processors.SlidingWindow(3) |> x->collect(Vector,x) == [[1,2,3],[2,3,4],[3,4,5],[4,5,6]]
