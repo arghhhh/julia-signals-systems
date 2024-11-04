@@ -19,6 +19,12 @@ For example this is not supported:
 ```julia
 system = Base.Iterators.map( x->x^2 ) |> Base.Iterators.take(5)  # this does not work
 ```
+To make this work, it would need to be written as:
+
+```julia
+system = sig -> Base.Iterators.map( x->x^2, sig ) |> sig -> Base.Iterators.take(sig,5)
+```
+which returns an anonymous function with a meaningless symbol name during debugging.
 
 However, using this very simple framework, this is supported:
 
@@ -39,6 +45,16 @@ giving:
 ```
 
 This could also be achieved using [Transducers.jl](https://juliafolds.github.io/Transducers.jl/dev/) but transducers are more general and harder to comprehend. The heart of this functionality is the few lines of code in [src/Processors/processor.jl](src/Processors/processor.jl).  The rest of repository contains example processors and also some signal generators.
+
+## Overview of Provided System Blocks
+
+upsample, downsample, take, map, flatten, SlidingWindow etc
+
+## Example building up high order running sum filters
+
+## Non-Signal-Processing examples
+
+
 
 A version of this was presented at [OrConf 2024](
 https://fossi-foundation.org/orconf/2024#digital-signal-processing-modeling-with-julia
