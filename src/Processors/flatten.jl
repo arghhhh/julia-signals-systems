@@ -17,33 +17,28 @@ Base.IteratorSize( ::Type{Apply{I,Flatten}}) where {I} = Base.SizeUnknown()
 Base.isdone(t::Apply{I,Flatten}) where {I} = Base.isdone(t.xs)
 Base.isdone(t::Apply{I,Flatten}, state) where {I} = Base.isdone(t.xs, state)
 
+function iterate_flatten_body( it, y_outer, y_inner )
+        while y_inner === nothing
+                # inner iterator is done
+                # iterate the outer loop and start again:
+                y_outer = Base.iterate(it.in, y_outer[2] )
+                y_outer === nothing && return nothing
+                y_inner = Base.iterate( y_outer[1])
+        end
+
+        yout = y_inner[1]
+        state = y_outer,y_inner[2]
+
+        return yout, state
+end
+
 function Base.iterate(it::Apply{I,Flatten} ) where {I}
 
         y_outer = Base.iterate(it.in )
         y_outer === nothing && return nothing
         y_inner = Base.iterate( y_outer[1])
 
-        while true
-
-                # now have the inner iterator to iterate over:
-
-                if y_inner === nothing
-                        # inner iterator is done
-                        # iterate the outer loop and start again:
-                        y_outer = Base.iterate(it.in, y_outer[2] )
-                        y_outer === nothing && return nothing
-                        y_inner = Base.iterate( y_outer[1])
-                        continue
-                end
-
-                # y_inner is not nothing - so have a value to return:
-                break
-        end
-
-        yout = y_inner[1]
-        state = y_outer,y_inner[2]
-
-    return yout, state
+        return iterate_flatten_body( it, y_outer, y_inner )
 end
 
 function Base.iterate(it::Apply{I,Flatten}, state ) where {I}
@@ -51,22 +46,5 @@ function Base.iterate(it::Apply{I,Flatten}, state ) where {I}
         y_outer, y_inner_state = state
         y_inner = Base.iterate( y_outer[1], y_inner_state )
 
-        while true
-                if y_inner === nothing
-                        # inner iterator is done
-                        # iterate the outer loop and start again:
-                        y_outer = Base.iterate(it.in, y_outer[2] )
-                        y_outer === nothing && return nothing
-                        y_inner = Base.iterate( y_outer[1] )
-                        continue
-                end                
-
-                # y_inner is not nothing - so have a value to return:
-                break
-        end
-
-        yout = y_inner[1]
-        state = y_outer,y_inner[2]
-        
-        return yout, state
+        return iterate_flatten_body( it, y_outer, y_inner )
 end
