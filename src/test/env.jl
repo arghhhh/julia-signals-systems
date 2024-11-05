@@ -12,3 +12,4 @@ end
 add_to_Julia_path( "." )
 add_to_Julia_path( "../Sequences" )
 add_to_Julia_path( "../Processors" )
+add_to_Julia_path( "../SNR" )

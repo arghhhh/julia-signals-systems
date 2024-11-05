@@ -57,8 +57,48 @@ xf = f1 |> f2 |> f3
         @test 1:6 |> Filter(iseven) |> Map(x -> 2x) |> collect == [4,8,12]
 
         # from https://juliafolds.github.io/Transducers.jl/dev/#Examples
-        # but this is Base.foldl whereas the Transducers.jl uses 
+        # but this is the standard Base.foldl whereas the Transducers.jl uses 
         # https://juliafolds.github.io/Transducers.jl/dev/reference/manual/#Base.foldl
         @test Base.foldl(+, 1:6 |> Filter(iseven) |> Map(x -> 2x)) == 24
+
+        # even with a single noise source - should get different random numbers every time
+        noise = Sequences.UniformRandom(-1.0,1.0)
+        y1 = noise |> Processors.Take(10) |> collect
+        y2 = noise |> Processors.Take(10) |> collect
+        @test y1 != y2
+        y1 = Sequences.UniformRandom(-1.0,1.0) |> Processors.Take(10) |> collect
+        y2 = Sequences.UniformRandom(-1.0,1.0) |> Processors.Take(10) |> collect
+        @test y1 != y2
+
+        # but with the same given seed, even with two distinct noise sources, 
+        # should get the same sequence:
+        seed = 1
+        y1 = Sequences.UniformRandom(-1.0,1.0,seed) |> Processors.Take(10) |> collect
+        y2 = Sequences.UniformRandom(-1.0,1.0,seed) |> Processors.Take(10) |> collect
+        @test y1 == y2
+
+        # even with a single noise source - should get different random numbers every time
+        noise = Sequences.GaussianRandom()
+        y1 = noise |> Processors.Take(10) |> collect
+        y2 = noise |> Processors.Take(10) |> collect
+        @test y1 != y2
+        y1 = Sequences.GaussianRandom() |> Processors.Take(10) |> collect
+        y2 = Sequences.GaussianRandom() |> Processors.Take(10) |> collect
+        @test y1 != y2
+
+        # but with the same given seed, even with two distinct noise sources, 
+        # should get the same sequence:
+        seed = 1
+        y1 = Sequences.GaussianRandom(seed) |> Processors.Take(10) |> collect
+        y2 = Sequences.GaussianRandom(seed) |> Processors.Take(10) |> collect
+        @test y1 == y2
+
+        # arithmetic with sequences
+        # the random numbers should have mean 2, so plus 3 and then multiply by 2
+        # gives an expected value of 10, summed over 10000 values, gives an 
+        # expected value of 100000
+        s = sum( 2*( 3 + Sequences.UniformRandom(1.0, 3.0, seed) ) |> Processors.Take(10000) )
+        @test 99000 < s < 101000
+
 end
 nothing
