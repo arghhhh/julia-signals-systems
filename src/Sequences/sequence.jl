@@ -238,6 +238,8 @@ function info( s, n = 20 ; print_state = false )
 end
 
 
+# TODO: move these to a separate file
+#=
 # some simple bring-up "tests"
 info( Test_Range(5) )
 info( Test_Range_Inf() )
@@ -245,3 +247,4 @@ info( Test_Range_Unknown() )
 info( 100 + Test_Range(5) )
 info( 100 + Test_Range_Inf() )
 info( 100 + Test_Range_Unknown() )
+=#
