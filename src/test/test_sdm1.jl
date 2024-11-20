@@ -42,7 +42,7 @@ if true
                 y_pdB[i] = Spectrum.bandlimited_power_dB(s,0.0,0.5/8,1.0)
 
         end
-        plot( dc_range, y_pdB, ylim=(-50,0 ) )
+        plot( dc_range, y_pdB, linewidth = 3, ylim=(-50,0 ) )
         plot!( xlabel="Input DC Level")
         plot!( ylabel="Inband Noise Level")
         plot!( legend=nothing )
@@ -80,10 +80,11 @@ if true
                 y_sigdB[i] = 20.0 * log10( mag[1] )
 
         end
-        plot( acdB_range, y_sigdB, ylim=(-60,0 ) )
+        plot( acdB_range, y_sigdB, linewidth = 3, ylim=(-60,0 ) )
         plot!( xlabel="Input Level (dB)")
         plot!( ylabel="Output Level (dB)")
         plot!( legend=nothing )
+
 
         savefig( "sdm1_ac_sweep.svg")
 
