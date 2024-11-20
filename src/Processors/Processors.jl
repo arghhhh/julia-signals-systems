@@ -12,5 +12,6 @@ include( "filter.jl" )
 include( "flatten.jl")
 include( "fir.jl" )
 include( "integrator.jl" )
+include( "sdm1.jl" )
 
 end
