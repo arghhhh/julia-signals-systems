@@ -22,6 +22,12 @@ end
 (p2::abstract_processor)( p1::abstract_processor ) = Compose( p1, p2 )
 (p2::abstract_processor)( it                     ) = Apply(   it, p2 )
 
+# this would be better, but would introduce Sequences as a dependency
+# it would allow things like (1 |> sys) where 1 would be promoted to an infinite length sequence
+# instead this must use this: ( Sequences.sequence(1) |> sys )
+# (p2::Processors.abstract_processor)( it ) = Processors.Apply(   Sequences.sequence(it), p2 )
+
+
 # a composed structure will be used, by applying an input iterator,
 # or composing with another processor:
 (c::Compose)( in                     ) = c.p2( c.p1( in ) )

@@ -40,10 +40,10 @@ sequence( x::Tuple  ) = Sequence( Base.Iterators.repeated(x) ) # repeat tuples r
 # These will promote arguments - in particular constants will become infinite length sequences
 
 # Op - is a function (not a symbol)
-struct SequenceBinaryOp{Op,A,B} <: abstract_sequence
+struct BinaryOp{Op,A,B} <: abstract_sequence
 	a::A
 	b::B
-	function SequenceBinaryOp{Op}( a1::A1, b1::B1 ) where {Op,A1,B1}
+	function BinaryOp{Op}( a1::A1, b1::B1 ) where {Op,A1,B1}
 		# promote the arguments to sequence - this is where constants become infinite length sequences
 		a,b = sequence(a1), sequence(b1)
 		new{Op,typeof(a),typeof(b)}(a,b)
@@ -52,7 +52,7 @@ struct SequenceBinaryOp{Op,A,B} <: abstract_sequence
 
 end
 
-function Base.iterate( p::SequenceBinaryOp{Op,A,B}, states = (Base.iterate(p.a),Base.iterate(p.b)) ) where {Op,A,B }
+function Base.iterate( p::BinaryOp{Op,A,B}, states = (Base.iterate(p.a),Base.iterate(p.b)) ) where {Op,A,B }
 
 	# at this point iterate has already been called for A and B
 
@@ -69,13 +69,13 @@ function Base.iterate( p::SequenceBinaryOp{Op,A,B}, states = (Base.iterate(p.a),
 	end
 end
 
-Base.IteratorSize( ::Type{ SequenceBinaryOp{Op,A,B} } ) where {Op,A,B} = combined_iteratorsize( Base.IteratorSize(A), Base.IteratorSize(B) )
-Base.length( it::SequenceBinaryOp{Op,A,B} ) where {Op,A,B} = begin
+Base.IteratorSize( ::Type{ BinaryOp{Op,A,B} } ) where {Op,A,B} = combined_iteratorsize( Base.IteratorSize(A), Base.IteratorSize(B) )
+Base.length( it::BinaryOp{Op,A,B} ) where {Op,A,B} = begin
 	combined_iteratorlength( Base.IteratorSize(A), Base.IteratorSize(B), it.a, it.b )
 end
 
 # use the Julia promote_op mechanism to determine the result type of arithmetically combining eltype(A) and eltype(B):
-Base.eltype( ::Type{ SequenceBinaryOp{Op,A,B} } ) where {Op,A,B} = begin
+Base.eltype( ::Type{ BinaryOp{Op,A,B} } ) where {Op,A,B} = begin
 	Base.promote_op(Op,Base.eltype(A),Base.eltype(B))
 end
 
@@ -121,9 +121,9 @@ combined_iteratorlength( ::Base.HasShape{1}, ::Base.HasShape{1}, a, b ) = combin
 for op = (:+,:-,:*,:/ )
 	eval(quote
 		# at least one of the two arguments needs to be a sequence:
-		(Base.$op)(a                   ,b::abstract_sequence ) = SequenceBinaryOp{$op}( a, b )
-		(Base.$op)(a::abstract_sequence,b                    ) = SequenceBinaryOp{$op}( a, b )
-		(Base.$op)(a::abstract_sequence,b::abstract_sequence ) = SequenceBinaryOp{$op}( a, b )
+		(Base.$op)(a                   ,b::abstract_sequence ) = BinaryOp{$op}( a, b )
+		(Base.$op)(a::abstract_sequence,b                    ) = BinaryOp{$op}( a, b )
+		(Base.$op)(a::abstract_sequence,b::abstract_sequence ) = BinaryOp{$op}( a, b )
 	end)
 end
 
