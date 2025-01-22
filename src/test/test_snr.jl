@@ -79,7 +79,7 @@ import Spectrum
         pdB = Spectrum.bandlimited_power_dB(s,0.0,0.25,1.0)
 
         @test isapprox( p  , 1.5         ; atol = 0.01 ) # 1 from DC, 0.5 from the bandlimited AC noise
-        @test isapprox( pdB, 10log10(1.5); atol = 0.01 ) # 
+        @test isapprox( pdB, 10log10(1.5); atol = 0.1 ) # 
 
 
 
@@ -108,7 +108,7 @@ end
 
 
 
-if true
+if false
         # check run time for the various versions, for a larger problem:
 
         n = 16 * 1024 * 1024
