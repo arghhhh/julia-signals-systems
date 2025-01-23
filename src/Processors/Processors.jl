@@ -13,5 +13,7 @@ include( "flatten.jl")
 include( "fir.jl" )
 include( "integrator.jl" )
 include( "sdm1.jl" )
+include( "sample-processor.jl" )
+include( "id.jl" )
 
 end

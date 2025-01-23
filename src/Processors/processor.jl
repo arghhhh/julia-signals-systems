@@ -34,3 +34,19 @@ end
 (c::Compose)( p1::abstract_processor ) = Compose( p1, c )
 
 # Could consider using ComposedFunction defined in julia/base/operators.jl​
+
+
+# add default versions of the optional and required functions for the iterator interface: 
+
+# size related - by default, same as input:
+Base.IteratorSize(  ::Type{Apply{Iter,Processor}}) where {Iter,Processor} = Base.IteratorSize( Iter )	
+Base.length(      it::     Apply{Iter,Processor} ) where {Iter,Processor} = Base.length( it )	                
+Base.size(        it::     Apply{Iter,Processor} ) where {Iter,Processor} = Base.size(   it )
+
+# eltype related - by default, same as the input:
+Base.IteratorEltype(::Type{Apply{Iter,Processor}}) where {Iter,Processor} = Base.IteratorEltype( Iter )
+Base.eltype(        ::Type{Apply{Iter,Processor}}) where {Iter,Processor} = Base.eltype( Iter )  
+
+# isdone - required when the input iterator is stateful - 
+Base.isdone(      it::     Apply{Iter,Processor} ) where {Iter,Processor} = Base.isdone(   it )	
+Base.isdone(      it::     Apply{Iter,Processor}, state ) where {Iter,Processor} = Base.isdone(   it , state )	
