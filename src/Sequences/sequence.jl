@@ -25,6 +25,9 @@ Base.eltype( ::Type{Sequence{A}} ) where {A} = Base.eltype( A )
 Base.length( it::Sequence{A} ) where {A} = Base.length( it.a )
 Base.size( it::Sequence{A} ) where {A} = Base.size( it.a )
 
+# can ask for the sample rate, but unless it is known, it will be returned as nothing, indicating unknown
+sample_rate( it ) = nothing
+
 
 # making sequences:
 
@@ -126,6 +129,22 @@ for op = (:+,:-,:*,:/ )
 		(Base.$op)(a::abstract_sequence,b::abstract_sequence ) = BinaryOp{$op}( a, b )
 	end)
 end
+
+function combined_sample_rate( s1, s2 )
+        if s1 === nothing
+                return s2
+        elseif s2 === nothing
+                return s1
+        end
+        @assert( s1 == s2, "Combining unequal sample rates $(s1) and $(s2)" )
+        return s1
+end
+
+function sample_rate( p::BinaryOp{op,A,B} ) where {op,A,B}
+        return combined_sample_rate( sample_rate(p.a), sample_rate(p.b) )
+end
+
+
 
 
 # some helper definitions to make defining sequences with fixed eltype easier:

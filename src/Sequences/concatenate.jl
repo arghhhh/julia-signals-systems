@@ -44,4 +44,6 @@ Base.length( it::Conc{A,B} ) where {A,B} = Base.length( it.a ) + Base.length( it
 concatenate( a, b ) = Conc( a, b )
 concatenate( a, b, c... ) = Conc( Conc( a, b ), c... )
 
-
+function sample_rate( p::Conc )
+        return combined_sample_rate( sample_rate(p.a), sample_rate(p.b) )
+end

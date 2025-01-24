@@ -5,7 +5,7 @@ using Test
 
 import Sequences:  Sequences, Test_Range, concatenate, info, sequence
 import Processors: Processors, Downsample, Upsample, Vectorize, Take, fir, Map, MapT, Integrator, Filter, Flatten
-
+import ProcSeqs  # not actually used here, but leave make it available for interactive work after running this
 
 # examples from https://clojure.org/reference/transducers
 
