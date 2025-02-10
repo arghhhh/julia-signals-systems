@@ -45,7 +45,7 @@ Base.size(        it::     Apply{Iter,Processor} ) where {Iter,Processor} = Base
 
 # eltype related - by default, same as the input:
 Base.IteratorEltype(::Type{Apply{Iter,Processor}}) where {Iter,Processor} = Base.IteratorEltype( Iter )
-Base.eltype(        ::Type{Apply{Iter,Processor}}) where {Iter,Processor} = Base.eltype( Iter )  
+#Base.eltype(        ::Type{Apply{Iter,Processor}}) where {Iter,Processor} = Base.eltype( Iter )  
 
 # isdone - required when the input iterator is stateful - 
 Base.isdone(      it::     Apply{Iter,Processor} ) where {Iter,Processor} = Base.isdone(   it )	

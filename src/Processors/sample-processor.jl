@@ -17,7 +17,10 @@ Base.IteratorSize(  ::Type{Apply{I,P}}) where {I,P<:SampleProcessor} = Base.Iter
 
 # functions dependent on the instance:
 #       eltype by default is the same as the input - override with specific version if necessary
-Base.eltype( a::Apply{I,P}) where {I,P<:SampleProcessor} = Base.eltype( a.in )
+Base.eltype( ::Type{ Apply{I,P} } ) where {I,P<:SampleProcessor} = begin
+        @show I P Base.eltype( I )
+        Base.eltype( I )
+end
 Base.length( a::Apply{I,P}) where {I,P<:SampleProcessor} = Base.length(a.in)
 Base.size(   a::Apply{I,P}) where {I,P<:SampleProcessor} = Base.size(  a.in)
 
@@ -60,6 +63,40 @@ function Base.iterate(it::Apply{I,P}, state ) where {I,P<:SampleProcessor}
          return y, (input_state,next_state)
 end
 
+# could have a specialized version of composition for two SampleProcessors that is also a SampleProcessor
+# (Normal processor composition is just a placeholder waiting for an applied seuqence)
+
+
+# --------------------------------
+
+# this defines a composition of two processors:
+struct Compose1{Processor1,Processor2} <: SampleProcessor
+        p1::Processor1
+        p2::Processor2
+end
+
+# the normal way to construct Apply{} and Compose{} is through pipe "|>" notation
+# which is converted to the parenthesis call operator in Julia
+# (Never define a "|>" implementation - that is unnecessary and breaks expectations)  
+
+# all processors should be defined deriving from abstract_processor, so
+# if the argument is not an abstract_processor, it is assumed to be the source iterator
+(p2::SampleProcessor)( p1::SampleProcessor ) = Compose1( p1, p2 )
+
+# this would be better, but would introduce Sequences as a dependency
+# it would allow things like (1 |> sys) where 1 would be promoted to an infinite length sequence
+# instead this must use this: ( Sequences.sequence(1) |> sys )
+# (p2::Processors.abstract_processor)( it ) = Processors.Apply(   Sequences.sequence(it), p2 )
+
+
+# a composed structure will be used, by applying an input iterator,
+# or composing with another processor:
+#(c::Compose1)( in                     ) = c.p2( c.p1( in ) )
+(c::Compose1)( p1::SampleProcessor ) = Compose1( p1, c )
+
+
+# --------------------------------
+
 
 
 # ambiguious whether
@@ -69,3 +106,8 @@ end
 
 # fir + Sequences.Sequence(1) 
 # fir + 1 
+
+
+
+#  
+

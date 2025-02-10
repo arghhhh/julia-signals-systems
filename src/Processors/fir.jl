@@ -41,7 +41,7 @@ end
 Base.IteratorEltype(::Type{Apply{I,DotProduct{T}}}) where {I,T} = Base.IteratorEltype(I)
 # if asked for the eltype, should be able to assume that the input eltype is known:
 # the input eltype is some kind of AbstractVector, so want the eltype of the eltype..
-Base.eltype( a::Apply{I,DotProduct{T}} ) where {I,T} = Base.promote_op(*,Base.eltype(Base.eltype(a.in)),T)
+Base.eltype( ::Type{ Apply{I,DotProduct{T}} } ) where {I,T} = Base.promote_op(*,Base.eltype(Base.eltype(I)),T)
 
 # length is the same as the input:
 Base.IteratorSize( ::Type{Apply{I,DotProduct{T}}}) where {I,T} = Base.IteratorSize(I)

@@ -14,6 +14,7 @@ include( "fir.jl" )
 include( "integrator.jl" )
 include( "sdm1.jl" )
 include( "sample-processor.jl" )
+include( "sample-processor-arith.jl" )
 include( "id.jl" )
 
 end
