@@ -3,8 +3,8 @@
 
 # to define a processor which produces one and only one output per input,
 # define the processor as a struct P
-# and deine the functions process( p::P, x        ) returning y,next_state
-#                   and   process( p::P, x, state ) returning y,next_state
+# and define the functions process( p::P, x        ) returning y,next_state
+#                   and    process( p::P, x, state ) returning y,next_state
 
 
 abstract type SampleProcessor <: abstract_processor

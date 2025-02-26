@@ -33,12 +33,55 @@ Base.eltype( ::Type{ Apply{I,FIR{T}} } ) where {I,T} = Base.promote_op( *, Base.
 
 
 
+
+
+
 # minimal type level "sequence" - that returns an eltype of T
 # there is no iteration implementation, so can't be used for anything 
 # other than calculating other eltypes:
 struct SeqT{T}
 end
 Base.eltype( ::Type{ SeqT{T}} ) where {T} = T
+
+
+
+
+
+struct IIR_poles{T} <: SampleProcessor
+        coeffs::Vector{T}
+#        function IIR_poles( coeffs )
+#                @assert isone(coeffs[1])
+#                new{T}( coeffs )
+#        end
+end
+
+# unlike FIR where the state is the same type as the input,
+# the poles need to store state in the output type:
+process( p::IIR_poles{T}, x ) where {T} = begin
+        # check that first coefficient is one
+        # the time domain algorithm assumes that it is one (for efficiency)
+        # so its upto the caller to ensure that this assertion doesn't fire
+        @assert isone(p.coeffs[1])
+        @show SeqT{typeof(x)}
+        @show Apply{ SeqT{typeof(x) }, IIR_poles{T} }
+        @show p Base.eltype( Apply{ SeqT{typeof(x) }, IIR_poles{T} } )
+        state=zeros( Base.eltype( Apply{ SeqT{typeof(x) }, IIR_poles{T} } ) ,length(p.coeffs) - 1 )
+        return process( p, x, state )
+end
+process( p::IIR_poles{T}, x, state ) where {T} = begin
+        y1 = LinearAlgebra.dot( state, p.coeffs[2:end] )
+        y = x - y1
+        next_state = [ y, state[1:end-1]... ]
+        @show x state next_state y
+        println()
+        return y,next_state
+end
+
+Base.eltype( ::Type{ Apply{I,IIR_poles{T}} } ) where {I,T} = Base.promote_op( *, Base.eltype( Base.eltype(I) ),T)
+
+
+
+
 
 
 
