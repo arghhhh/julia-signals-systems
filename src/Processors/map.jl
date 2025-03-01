@@ -38,7 +38,7 @@ end
 
 
 
-# this includes a conversion of the reult to type T:
+# this includes a conversion of the result to type T:
 
 struct MapT{T} <: abstract_processor
         fn::Function

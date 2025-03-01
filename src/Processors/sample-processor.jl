@@ -1,10 +1,22 @@
 
 
-
 # to define a processor which produces one and only one output per input,
 # define the processor as a struct P
 # and define the functions process( p::P, x        ) returning y,next_state
 #                   and    process( p::P, x, state ) returning y,next_state
+# The size of the output is the same as that of the input
+# The eltype is by default, the same as the input.
+# This default can be overriden by defining 
+#     Base.eltype( ::Type{Apply{I,P}})
+# as usual.  There is a helper struct SeqT that exists to help define eltype
+# and process(..) when the input type is known. 
+
+# having a processor category that always produces one and only one output 
+# for each input makes it possible to easily define processors that combine other 
+# processors in parallel - eg adding/subtracting processors, or have a vector of 
+# processors act on a vector input
+
+
 
 
 abstract type SampleProcessor <: abstract_processor
@@ -69,10 +81,35 @@ end
 
 # --------------------------------
 
+
+# minimal type level "sequence" - that returns an eltype of T
+# there is no iteration implementation, so can't be used for anything 
+# other than calculating other eltypes:
+struct SeqT{T}
+end
+Base.eltype( ::Type{ SeqT{T}} ) where {T} = T
+
+
+
 # this defines a composition of two processors:
 struct Compose1{Processor1,Processor2} <: SampleProcessor
         p1::Processor1
         p2::Processor2
+end
+
+function process( sys::Compose1{Processor1,Processor2}, x ) where {Processor1,Processor2}
+	p1_y,p1_state = process( sys.p1, x    )
+	p2_y,p2_state = process( sys.p2, p1_y )
+	return p2_y, (p1_state,p2_state)
+end
+function process( sys::Compose1{Processor1,Processor2}, x, state ) where {Processor1,Processor2}
+	p1_state,p2_state = state
+	p1_y,next_p1_state = process( sys.p1, x    , p1_state )
+	p2_y,next_p2_state = process( sys.p2, p1_y , p2_state )
+	return p2_y, (next_p1_state,next_p2_state)
+end
+Base.eltype( ::Type{Apply{I,Compose1{Processor1,Processor2}}}) where {I,Processor1,Processor2} = begin
+        Base.eltype( Apply{ SeqT{Base.eltype( Apply{I,Processor1} )}, Processor2 } )
 end
 
 # the normal way to construct Apply{} and Compose{} is through pipe "|>" notation
@@ -93,6 +130,11 @@ end
 # or composing with another processor:
 #(c::Compose1)( in                     ) = c.p2( c.p1( in ) )
 (c::Compose1)( p1::SampleProcessor ) = Compose1( p1, c )
+(c::Compose1)( p1::abstract_processor ) = Compose( p1, c )
+
+(c::Compose1)( in                  ) = c.p2( c.p1( in ) )
+
+
 
 
 # --------------------------------
@@ -107,7 +149,8 @@ end
 # fir + Sequences.Sequence(1) 
 # fir + 1 
 
-
+# this ambiguity resoved by defaulting to treating constant numbers as infinite length sequences
+# Use Gain() or similar to add a parallel path
 
 #  
 

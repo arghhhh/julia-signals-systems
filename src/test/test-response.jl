@@ -7,7 +7,7 @@ import Sequences
 import Processors
 import ProcSeqs
 
-impulse = [ 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0 ]
+impulse = [ 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 ]
 
 sys = Processors.FIR( [ 1, 1, 1, 1 ] )
 
@@ -92,7 +92,7 @@ sys_butt6 = (
 
 sys = sys_butt6
 # sys = Processors.IIR_poles( [ 1.0, -0.9 ] )
-f = range( 0.0001, 1.0; length = 1000 )
+f = range( 0.0001, 0.9999; length = 997 )
 
 r9dB  = ProcSeqs.freqzdB( sys , f )
 r9deg = ProcSeqs.freqphasedegrees( sys , f )
@@ -102,4 +102,97 @@ sys = sys_butt6 |> Processors.Downsample(2) |> sys_butt6
 r10dB  = ProcSeqs.freqzdB( sys , f )
 r10deg = ProcSeqs.freqphasedegrees( sys , f )
 r10dly = ProcSeqs.freqz_grpdelay( sys, f )
+
+
+int1 = Processors.IIR_poles( [ 1, -1 ] )
+diff1 = Processors.FIR( [ 1, -1 ] )
+
+# CIC terminology:
+# r = decimation ratio
+# n = order
+
+r = 8
+n = 4
+
+sys = int1^n |> Processors.Downsample(r) |> diff1^n
+r11dB  = ProcSeqs.freqzdB( sys , f )
+r11deg = ProcSeqs.freqphasedegrees( sys , f )
+r11dly = ProcSeqs.freqz_grpdelay( sys, f )
+r11_impulse = impulse |> sys |> collect
+
+sys = Processors.FIR( ones(Int,r) )^n
+r12dB  = ProcSeqs.freqzdB( sys , f )
+r12deg = ProcSeqs.freqphasedegrees( sys , f )
+r12dly = ProcSeqs.freqz_grpdelay( sys, f )
+r12_impulse = impulse |> sys |> Processors.Downsample(r) |> collect
+
+p = Processors.VectorProcessor{Float64}( [ Processors.Delay(1), Processors.Delay(0) ] )
+v = [ 1.0, 1.0]
+
+y,states = Processors.process( p, v )
+y,states = Processors.process( p, v, states )
+
+impulse = [ 0, 0, 1, 0, 0, 0]
+
+n = 4
+
+p1 = Processors.VectorProcessor{Float64}( [ Processors.Delay(i) for i in n-1:-1:0 ] )
+p2 = Processors.VectorProcessor{Float64}( [ Processors.Delay(i) for i in   0: n-1 ] )
+
+# y0 = impulse |> Processors.MapT{ Vector{Float64} }( x->[x,x] ) |> p |> collect
+y0 = impulse |> Processors.MapT{ Vector{Float64} }( x->fill(x,n) ) |> p1 |> collect
+y1 = impulse |> Processors.Vectorize(n) |> (x->collect(Vector,x))
+
+y0 == y1
+ 
+rnd = [ rand( 0:10 ) for x in 1:10 ]
+
+
+conv1( v1, v2 ) = begin
+        l1 = length(v1)
+        l2 = length(v2)
+        z = zeros( promote_type( eltype(v1), eltype(v2) ), l1 + l2 -1 )
+        for i in eachindex(v2)
+                z[ i:i+l1-1 ] += v2[2] .* v1
+        end
+        return z
+end
+conv( v1, v2 ) = length(v1) >= length(v2) ? conv1( v1, v2 ) : conv1( v2, v1 )
+
+reshape( v1, n, v2 = Vector{ Vector{eltype(v1)} }() ) = begin
+        if length(v1) <= n
+                push!( v2, v1 )
+                return v2
+        else
+                push!( v2, v1[1:n] )
+                return reshape( v1[n+1:end], n, v2 )
+        end
+end
+
+
+# want to make p2 type reformatter take a vector of inputs
+# and make the appropriate length incremental delay processor automatically
+
+sys = (
+           Processors.MapT{ Vector{Float64} }( x->fill(x,n) ) 
+        |> p1 
+        |> Processors.Downsample(n,n-1)
+        |> Processors.Upsample(n)
+        |> p2
+        |> Processors.MapT{Float64}( sum )
+)
+
+1:20 |> sys |> collect
+
+
+sys = (
+           Processors.MapT{ Vector{Float64} }( x->fill(x,n) ) 
+        |> Processors.Delays1()
+        |> Processors.Downsample(n,n-1)
+        |> Processors.Upsample(n)
+        |> Processors.Delays2()
+        |> Processors.MapT{Float64}( sum )
+        )
+
+1:20 |> sys |> collect
 

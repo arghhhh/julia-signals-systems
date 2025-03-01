@@ -60,6 +60,9 @@ end
 # 2.  Upsamplehold : repeat the input an additional n-1 times for each input sample
 
 
+Upsample_zero( t, n ) = zero(t)
+Upsample_zero( ::Type{ Vector{T} }, n ) where {T} = zeros( T ,n)
+
 struct Upsample <: abstract_processor
 	n::Int
 end
@@ -87,7 +90,8 @@ function Base.iterate( a::Apply{T_iter,Upsample}, input_state_upsample_state ) w
 
 	(input_state,upsample_state) = input_state_upsample_state
 
-	y = zero( Base.eltype(a.in) )
+#	y = zero( Base.eltype(a.in) )
+	y = Upsample_zero( Base.eltype(a.in), a.p.n )
 	upsample_state_next = upsample_state - 1
 	if upsample_state == 0
 		upsample_state_next = a.p.n-1

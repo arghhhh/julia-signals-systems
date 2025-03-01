@@ -4,6 +4,39 @@ struct Identity <: SampleProcessor; end
 
 process( id::Identity, x, state=nothing ) = x,state
 
+struct Delay1 <: SampleProcessor; end
+process( ::Delay1, x, state=zero(x) ) = state,x
+
+struct Delay <: SampleProcessor
+        n::Int
+end
+process( p::Delay, x, state=(1,zeros(typeof(x), p.n)) ) = begin
+        i,v = state
+
+        if p.n == 0 
+                # no delay - special case, don't use vector state at all:
+                return x,state
+        end
+
+        y = v[i]
+	v[ i ] = x
+
+	i_next = ( i < p.n ) ? i + 1 : 1
+        next_state = i_next,v
+
+        return y,next_state
+end
+
+
+delay_state( x, v, i ) = begin
+        if length(v) < 1 
+                return x,v,i
+        end
+        y = v[i]
+        v[i] = x
+        i = i < length(v) ? i + 1 : 1
+        return y, v, i
+end
 
 
 
@@ -35,13 +68,6 @@ Base.eltype( ::Type{ Apply{I,FIR{T}} } ) where {I,T} = Base.promote_op( *, Base.
 
 
 
-
-# minimal type level "sequence" - that returns an eltype of T
-# there is no iteration implementation, so can't be used for anything 
-# other than calculating other eltypes:
-struct SeqT{T}
-end
-Base.eltype( ::Type{ SeqT{T}} ) where {T} = T
 
 
 
@@ -126,4 +152,64 @@ function Base.eltype( ::Type{ Apply{I,ForwardFeedback{B,A}} } ) where {I,B,A}
 
         return T_y1
 end
+
+# for now at least - force user to explicity specify output eltype
+struct VectorProcessor{T} <: SampleProcessor
+        p::Vector{SampleProcessor}
+end
+process( p::VectorProcessor{T}, v ) where {T} = begin
+        n = length(v)
+        states  = Vector( undef, n )
+        ys      = zeros(      T, n )
+        for i = eachindex( p.p )
+                ys[i],states[i] = process( p.p[i], v[i] )
+        end
+        return ys, states
+end
+process( p::VectorProcessor{T}, v, states ) where {T} = begin
+        n  = length(v)
+        ys = zeros(      T, n )
+        for i = eachindex( p.p )
+                ys[i],states[i] = process( p.p[i], v[i], states[i] )
+        end
+        return ys, states
+end
+
+
+# the only difference between Delays1 and Delays2 is the ordering of the delays is reversed
+# so they both are very similar and commonality factored out into process_delays
+
+struct Delays1 <: SampleProcessor ; end
+struct Delays2 <: SampleProcessor ; end
+
+process( p::Delays1, v ) = begin
+        n = length(v)
+        state_v  = [ zeros(eltype(v), i ) for i in n-1:-1:0 ]
+        state_i  = ones( Int64, n )
+
+        return process_delays( v, (state_v, state_i) )
+end
+process( p::Delays1, v, state ) = process_delays( v, state )
+
+process( p::Delays2, v ) = begin
+        n = length(v)
+        state_v  = [ zeros(eltype(v), i ) for i in 0:n-1 ]
+        state_i  = ones( Int64, n )
+
+        return process_delays( v, (state_v, state_i) )
+end
+process( p::Delays2, v, state ) = process_delays( v, state )
+
+
+
+process_delays( vx, states ) = begin
+        (state_v, state_i) = states
+        n  = length(vx)
+        y = zeros( eltype(vx), n )
+        for j in eachindex( state_v )
+                y[j], state_v[j], state_i[j] = delay_state( vx[j], state_v[j], state_i[j] )
+        end
+        return y, (state_v,state_i)
+end
+
 
