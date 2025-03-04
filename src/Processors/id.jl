@@ -193,7 +193,10 @@ process( p::Delays1, v, state ) = process_delays( v, state )
 
 process( p::Delays2, v ) = begin
         n = length(v)
-        state_v  = [ zeros(eltype(v), i ) for i in 0:n-1 ]
+     #   state_v  = [ zeros(eltype(v), i ) for i in 0:n-1 ]
+     # the above line doesn't work when eltype(v) is a Vector (the length is unknown)
+     # so write it out like below
+        state_v  = [ eltype(v)[ zero( v[j] ) for j in 1:i ]  for i in 0:n-1 ]
         state_i  = ones( Int64, n )
 
         return process_delays( v, (state_v, state_i) )
@@ -204,11 +207,13 @@ process( p::Delays2, v, state ) = process_delays( v, state )
 
 process_delays( vx, states ) = begin
         (state_v, state_i) = states
-        n  = length(vx)
-        y = zeros( eltype(vx), n )
+   #     n  = length(vx)
+        y = Vector{eltype(vx)}(undef,length(vx))
         for j in eachindex( state_v )
                 y[j], state_v[j], state_i[j] = delay_state( vx[j], state_v[j], state_i[j] )
         end
+
+
         return y, (state_v,state_i)
 end
 

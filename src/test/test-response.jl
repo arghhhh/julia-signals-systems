@@ -153,7 +153,7 @@ conv1( v1, v2 ) = begin
         l2 = length(v2)
         z = zeros( promote_type( eltype(v1), eltype(v2) ), l1 + l2 -1 )
         for i in eachindex(v2)
-                z[ i:i+l1-1 ] += v2[2] .* v1
+                z[ i:i+l1-1 ] += v2[i] .* v1
         end
         return z
 end
@@ -161,13 +161,44 @@ conv( v1, v2 ) = length(v1) >= length(v2) ? conv1( v1, v2 ) : conv1( v2, v1 )
 
 reshape( v1, n, v2 = Vector{ Vector{eltype(v1)} }() ) = begin
         if length(v1) <= n
-                push!( v2, v1 )
+        #        push!( v2, v1 )
+                lastv = vcat( v1, zeros( eltype(v1), n - length(v1) ) )
+                push!( v2, lastv )
                 return v2
         else
                 push!( v2, v1[1:n] )
                 return reshape( v1[n+1:end], n, v2 )
         end
 end
+
+# wrap reshape() into a Processor object so that the eltypes can be tidied up, 
+# so that
+#        Processors.MapT{Vector{Vector{Int}}}( x->reshape(x,L ) )
+# can be replaced with
+#        Reshape(L)
+#
+
+struct Reshape <: Processors.SampleProcessor
+        n::Int
+end
+Processors.process( p::Reshape, x, state=nothing ) = begin
+        reshape(x,p.n),state
+end
+Base.eltype( ::Type{ Processors.Apply{I,Reshape} }) where {I,T} = Vector{ eltype(I) }
+
+# wrap sum to allow this
+  #      |> Processors.MapT{Vector{Int}}( sum )
+# to become:
+#  Sum()
+
+
+struct Sum <: Processors.SampleProcessor
+end
+Processors.process( p::Sum, x, state=nothing ) = begin
+        sum(x),state
+end
+Base.eltype( ::Type{ Processors.Apply{I,Sum} }) where {I,T} = eltype( eltype(I) )
+
 
 
 # want to make p2 type reformatter take a vector of inputs
@@ -196,3 +227,101 @@ sys = (
 
 1:20 |> sys |> collect
 
+
+
+# overlap-save:
+
+# sliding window min length L+M-1 
+# down sample by L
+# convolve with h length M, to get result length L+2M-2 which can be considered
+#   to have M-1 "bad" samples at either end, and L good samples in the middle
+# reconstruct using the L good samples
+
+h = [1,2,3,4]
+
+L = 8
+M = length(h)
+
+impulse = [ 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
+
+conv_core( x, h ) = begin
+        y1 = conv(x,h)
+        y = y1[M:M+L-1]
+        println()
+        @show x h y1 y
+        println()
+        return y
+end
+
+# This:
+#    (  Processors.MapT{ Vector{Int} }( x->fill(x,L+M-1) ) 
+#    |> Processors.Delays1()
+#    )
+# is equivalent to Processors.Vectorize(L+M-1)
+
+overlapsave( vlen, decimation ) = Processors.Vectorize(vlen) |> Processors.Downsample(L,L-1)
+
+
+sys = (
+#           Processors.MapT{ Vector{Int} }( x->fill(x,L+M-1) ) 
+ #       |> Processors.Delays1()
+#        |> Processors.Downsample(L,L-1)
+           overlapsave( L+M-1, L )
+        |> Processors.MapT{Vector{Int}}( x->conv(x,h) )
+        |> Processors.MapT{Vector{Int}}( x->x[M:M+L-1] )
+#        |> Processors.Upsample(L)
+ #       |> Processors.Delays2()
+ #       |> Processors.MapT{Int}( sum )
+        |> Processors.Serialize()
+        )
+
+xs = rand( 0:10, 200 )
+
+y1 = xs |> sys |> collect
+y2 = conv( xs, h )
+
+@show length(y1) M L
+@show y1 == y2[1:length(y1)]
+# 
+# sys1 = (
+#            Processors.MapT{ Vector{Int} }( x->fill(x,L+M-1) ) 
+#         |> Processors.Delays1()
+#      #   |> Processors.Downsample(L,L-1)
+# )
+# 
+# xs = 1:20
+# xs |> sys1 |> collect
+
+
+# overlap-add
+
+# SlidingWindow(L)
+# Downsample(L)
+# convolve
+# v->reshape(v,L)
+# Delays2
+# v->sum(v)
+# serialize 
+
+overlapadd( vlen ) = Reshape(vlen) |> Processors.Delays2() |> Sum()
+
+sys = 
+        (  Processors.SlidingWindow(L) 
+        |> Processors.Downsample(L) 
+        |> Processors.MapT{Vector{Int}}( x->conv(x,h) )
+    #    |> Reshape(L)
+    #    |> Processors.Delays2()
+    #    |> Sum()
+        |> overlapadd(L)
+        |> Processors.Serialize()
+        )
+
+        y1 = xs |> sys |> collect
+        y2 = conv( xs, h )
+        
+        @show length(y1) M L
+        @show y1 == y2[1:length(y1)]
+        
+
+
+    #    xs |> sys |> Sequences.info
