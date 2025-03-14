@@ -47,6 +47,18 @@ process( p::Convert{T}, x, state=nothing ) where {T} = Base.convert(T,x),state
 Base.eltype( ::Type{ Apply{I,Convert{T}} }) where {I,T} = T
 
 
+# version of Map where the function is supplied as a parameter
+# and the function is overloaded to return the result for non-type inputs
+# and to return the output type when given the input type
+# ie
+#       fn( x::Tin ) = y :: T_out
+# and   fn( ::Type{Tin} ) = T_out
+struct Mapa{Fn} <: SampleProcessor
+end
+process( p::Mapa, x, state=nothing ) = p.Fn(x),state
+Base.eltype( ::Type{ Apply{I,Mapa{Fn}} }) where {I,Fn} = Fn( Base.eltype(I) )
+
+
 # this is a simple implementation of an FIR filter
 # it moves the delay line contents every sample (ie not efficient)
 
@@ -57,8 +69,8 @@ end
 process( p::FIR{T}, x, state=zeros(typeof(x),length(p.coeffs) ) ) where {T} = begin
         next_state = [ x, state[1:end-1]... ]
         y = LinearAlgebra.dot( next_state, p.coeffs )
-        @show x state next_state y
-        println()
+  #      @show x state next_state y
+   #     println()
         return y,next_state
 end
 
@@ -88,18 +100,25 @@ process( p::IIR_poles{T}, x ) where {T} = begin
         # the time domain algorithm assumes that it is one (for efficiency)
         # so its upto the caller to ensure that this assertion doesn't fire
         @assert isone(p.coeffs[1])
-        @show SeqT{typeof(x)}
-        @show Apply{ SeqT{typeof(x) }, IIR_poles{T} }
-        @show p Base.eltype( Apply{ SeqT{typeof(x) }, IIR_poles{T} } )
+ #       @show SeqT{typeof(x)}
+  #      @show Apply{ SeqT{typeof(x) }, IIR_poles{T} }
+ #       @show p Base.eltype( Apply{ SeqT{typeof(x) }, IIR_poles{T} } )
         state=zeros( Base.eltype( Apply{ SeqT{typeof(x) }, IIR_poles{T} } ) ,length(p.coeffs) - 1 )
         return process( p, x, state )
 end
 process( p::IIR_poles{T}, x, state ) where {T} = begin
+  #      println()
+  #      @show x state
+  #      @show state p.coeffs[2:end]
+
         y1 = LinearAlgebra.dot( state, p.coeffs[2:end] )
+
+  #      @show y1
+
         y = x - y1
         next_state = [ y, state[1:end-1]... ]
-        @show x state next_state y
-        println()
+  #      @show next_state y
+  #      println()
         return y,next_state
 end
 

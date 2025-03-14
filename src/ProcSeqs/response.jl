@@ -6,7 +6,10 @@ f_to_z( f, fs ) = cispi( 2*f/fs )
 f_to_zm1( f, fs ) = conj( cispi( 2*f/fs ) )
 
 function freqz( sys, f, fs = 1.0 )
-        [ abs( response( sys, f1, fs )[1] ) for f1 in f ]
+        [ abs(  response( sys, f1, fs )[1] ) for f1 in f ]
+end
+function freqz2( sys, f, fs = 1.0 )  # response squared
+        [ abs2( response( sys, f1, fs )[1] ) for f1 in f ]
 end
 function freqzdB( sys, f, fs = 1.0 )
         [ 20*log10( abs( response( sys, f1 )[1] ) ) for f1 in f ]
