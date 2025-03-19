@@ -81,6 +81,51 @@ Base.eltype( ::Type{ Apply{I,FIR{T}} } ) where {I,T} = Base.promote_op( *, Base.
 
 
 
+reshape( v1, n, v2 = Vector{ Vector{eltype(v1)} }() ) = begin
+        if length(v1) <= n
+        #        push!( v2, v1 )
+                lastv = vcat( v1, zeros( eltype(v1), n - length(v1) ) )
+                push!( v2, lastv )
+                return v2
+        else
+                push!( v2, v1[1:n] )
+                return reshape( v1[n+1:end], n, v2 )
+        end
+end
+
+# wrap reshape() into a Processor object so that the eltypes can be tidied up, 
+# so that
+#        Processors.MapT{Vector{Vector{Int}}}( x->reshape(x,L ) )
+# can be replaced with
+#        Reshape(L)
+#
+
+struct Reshape <: Processors.SampleProcessor
+        n::Int
+end
+Processors.process( p::Reshape, x, state=nothing ) = begin
+        reshape(x,p.n),state
+end
+Base.eltype( ::Type{ Processors.Apply{I,Reshape} }) where {I} = Vector{ eltype(I) }
+
+# wrap sum to allow this
+  #      |> Processors.MapT{Vector{Int}}( sum )
+# to become:
+#  Sum()
+
+
+struct Sum <: Processors.SampleProcessor
+end
+Processors.process( p::Sum, x, state=nothing ) = begin
+        sum(x),state
+end
+Base.eltype( ::Type{ Processors.Apply{I,Sum} }) where {I} = eltype( eltype(I) )
+
+
+
+
+
+
 
 
 
