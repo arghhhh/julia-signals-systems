@@ -13,7 +13,7 @@ sys1_sub = 100 - Processors.Map( x -> 2x )
 sys1_mul = 100 * Processors.Map( x -> 2x )
 sys1_div = 120 / Processors.Map( x -> 2x )
 
-@testset begin
+@testset "arith-seq-proc" begin
 
         @test 1:5 |> sys1_add |> collect == [ 102, 104, 106, 108, 110 ]
         @test 1:5 |> sys1_sub |> collect == [  98,  96,  94,  92,  90 ]

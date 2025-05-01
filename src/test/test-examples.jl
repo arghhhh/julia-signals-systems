@@ -22,7 +22,7 @@ xf = f1 |> f2 |> f3
 # @show 1:100 |> xf |> collect
 
 
-@testset begin
+@testset "examples" begin
         @test 0:100 |> Filter( isodd  )               |> Take( 5 ) |> collect == [1,3,5,7,9]
         @test 0:100 |> Filter( isodd  ) |> Map( inc ) |> Take( 5 ) |> collect == [2,4,6,8,10]
         @test 1:100 |> Filter( isdiv4 ) |> Map( inc ) |> Take( 5 ) |> collect == [5,9,13,17,21]

@@ -32,7 +32,7 @@ v2 = [ WindowImplRef.w_sin( f , N, w_coeffs ) for f in fs ]
 @test all_approx_equal( v1, v2 )
 
 
-@testset begin
+@testset "windows" begin
         @testset for f in range( 0.0, 3N ; length = 1234 )
                 @test isapprox( WindowImpl.w_cos( f , N, w_coeffs ), WindowImplRef.w_cos(    f , N, w_coeffs ) ; atol = 1e-10 )
         end

@@ -10,7 +10,7 @@ import SNR
 import Spectrum
 
 
-@testset begin
+@testset "snr" begin
 
         # there is no science behind any of the atol (absolute tolerance) settings here
         # - so there is finite chance of isolated failures depending on the random numbers generated

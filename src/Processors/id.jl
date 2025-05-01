@@ -46,6 +46,12 @@ end
 process( p::Convert{T}, x, state=nothing ) where {T} = Base.convert(T,x),state
 Base.eltype( ::Type{ Apply{I,Convert{T}} }) where {I,T} = T
 
+# clamp to a type - eg Clamp{sFixPt(8,0)}
+struct Clamp{T} <: SampleProcessor
+end
+process( p::Clamp{T}, x, state=nothing ) where {T} = Base.clamp(x,T),state
+Base.eltype( ::Type{ Apply{I,Clamp{T}} }) where {I,T} = T
+
 
 # version of Map where the function is supplied as a parameter
 # and the function is overloaded to return the result for non-type inputs
@@ -170,7 +176,7 @@ end
 Base.eltype( ::Type{ Apply{I,IIR_poles{T}} } ) where {I,T} = Base.promote_op( *, Base.eltype( Base.eltype(I) ),T)
 
 
-
+IIR( numerator, denominator ) = FIR( numerator ) |> IIR_poles( denominator )
 
 
 

@@ -12,7 +12,7 @@ function freqz2( sys, f, fs = 1.0 )  # response squared
         [ abs2( response( sys, f1, fs )[1] ) for f1 in f ]
 end
 function freqzdB( sys, f, fs = 1.0 )
-        [ 20*log10( abs( response( sys, f1 )[1] ) ) for f1 in f ]
+        [ 20*log10( abs( response( sys, f1, fs )[1] ) ) for f1 in f ]
 end
 function freqphase( sys, f, fs = 1.0 )
         [ angle( response( sys, f1, fs )[1] ) for f1 in f ]
@@ -48,6 +48,11 @@ function response( sys::Processors.IIR_poles, f, fs = 1.0, z = f_to_zm1(f,fs) )
         delay = -real( p_ramped / h1 ) / fs
         return h, delay, f, fs, z
 end
+function response( sys::Processors.Delay, f, fs = 1.0, z = f_to_zm1(f,fs) )
+        h = z ^ sys.n
+        delay = sys.n
+        return h, delay, f, fs, z
+end
 function response( sys::Processors.Gain, f, fs = 1.0, z = f_to_zm1(f,fs) )
         return sys.gain, 0.0, f, fs, z
 end
@@ -77,4 +82,18 @@ function response( sys::Processors.Upsample, f, fs = 1.0, z = f_to_zm1(f,fs) )
         z1 = f_to_zm1(f,fs1)
 
         return h1, d1, f, fs1, z1
+end
+
+function response( sys::Processors.Identity, f, fs = 1.0, z = f_to_zm1(f,fs) )
+        h = 1.0  # response
+        d = 0.0  # delay
+        return h, d, f, fs, z
+end
+
+function response( sys::Processors.Arith_ProcProc{OP, P1, P2}, f, fs = 1.0, z = f_to_zm1(f,fs) ) where {OP,P1,P2}
+        h1,d1,_,_,_ = response( sys.lhs, f, fs, z )
+        h2,d2,_,_,_ = response( sys.rhs, f, fs, z )
+        h = (OP)(h1,h2)  # OP is either + or -
+        d = NaN  # delay  TBD
+        return h, d, f, fs, z
 end
