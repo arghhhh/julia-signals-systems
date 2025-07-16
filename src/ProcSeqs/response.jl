@@ -11,6 +11,23 @@ end
 function freqz2( sys, f, fs = 1.0 )  # response squared
         [ abs2( response( sys, f1, fs )[1] ) for f1 in f ]
 end
+
+function freqz_power( sys, n::Integer, fs = 2*(n-1) )
+     #   @show sys n fs
+    #    @show f = range( 0, fs/2 ; length=n )
+        r = freqz2( sys, range( 0, fs/2 ; length=n ), fs ) / (n-1)
+    #    r /= (n-1)
+        r[1] *= 0.5
+        r[end] *= 0.5
+        return r
+end
+
+# ProcSeqs.freqz2( tf2, 0:512, 1024 )
+# ( sum(ans[2:end] ) * 2 + ans[1] ) / 1024
+# compare with
+# @show sum( map( x->x*x, tf2.coeffs) )
+
+
 function freqzdB( sys, f, fs = 1.0 )
         [ 20*log10( abs( response( sys, f1, fs )[1] ) ) for f1 in f ]
 end

@@ -77,5 +77,11 @@ Base.:-( lhs::Number , rhs::SampleProcessor ) = Arith_ProcProc{-}( Gain(lhs), rh
 Base.:*( lhs::Number , rhs::SampleProcessor ) = Processors.Compose1( Gain(lhs), rhs )
 # assuming commutivity of * when applied on the next line:
 Base.:*( lhs::SampleProcessor , rhs::Number ) = Processors.Compose1( Gain(rhs), lhs )
+
+# TODO: why not replace above with following?
+# Base.:*( lhs::SampleProcessor , rhs::Number ) = Processors.Compose1( lhs, Gain(rhs) )
+
+
+
 # assuming reciprocal etc below:
 Base.:/( lhs::SampleProcessor , rhs::Number ) = Processors.Compose1( Gain(1/rhs), lhs )

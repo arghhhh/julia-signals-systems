@@ -5,7 +5,6 @@ struct Take <: abstract_processor
 	n::UInt  # force n to be positive
 end
 
-
 # eltype same as input eltype:
 Base.IteratorEltype(::Type{Apply{I,Take}}) where {I} = Base.IteratorEltype(I)
 Base.eltype(::Type{Apply{I,Take}}) where {I} = Base.eltype(I)
@@ -38,3 +37,52 @@ function Base.iterate(it::Apply{I,Take}, state=(it.p.n,)) where {I}
 	y === nothing && return nothing
 	return y[1], (n - 1, y[2])
 end
+
+
+
+# this is adapted from Julia Base Iterators 
+# https://github.com/JuliaLang/julia/blob/760b2e5b7396f9cc0da5efce0cadd5d1974c4069/base/iterators.jl#L802-L826
+
+# uses:
+# https://github.com/JuliaLang/julia/blob/760b2e5b7396f9cc0da5efce0cadd5d1974c4069/base/iterators.jl#L72C1-L78C4
+_diff_length(a, b, A, ::Base.IsInfinite) = 0
+_diff_length(a, b, ::Base.IsInfinite, ::Base.IsInfinite) = 0
+_diff_length(a, b, ::Base.IsInfinite, B) = length(a) # inherit behaviour, error
+function _diff_length(a, b, A, B)
+    m, n = length(a), length(b)
+    return m > n ? m - n : zero(n - m)
+end
+
+struct Drop <: abstract_processor
+    n::Int
+    function Drop(n::Integer)
+        n < 0 && throw(ArgumentError("Drop length must be non-negative"))
+        return new(n)
+    end
+end
+
+
+#drop(xs, n::Integer) = Drop(xs, Int(n))
+# drop(xs::Take, n::Integer) = Take(drop(xs.xs, Int(n)), max(0, xs.n - Int(n)))
+#drop(xs::Drop, n::Integer) = Drop(xs.xs, Int(n) + xs.n)
+
+Base.eltype(::Type{Apply{I,Drop}}) where {I} = eltype(I)
+Base.IteratorEltype(::Type{Apply{I,Drop}}) where {I} = Base.IteratorEltype(I)
+drop_iteratorsize(::Base.SizeUnknown) = Base.SizeUnknown()
+drop_iteratorsize(::Union{Base.HasShape, Base.HasLength}) = Base.HasLength()
+drop_iteratorsize(::Base.IsInfinite) = Base.IsInfinite()
+Base.IteratorSize(::Type{Apply{I,Drop}}) where {I} = drop_iteratorsize(Base.IteratorSize(I))
+
+# it is 1:d.n below so that _diff_length can call length on it...
+Base.length(d::Apply{I,Drop}) where {I} = _diff_length(d.in, 1:d.p.n, Base.IteratorSize(d.in), Base.HasLength())
+
+function Base.iterate(d::Apply{I,Drop}) where {I}
+    y = iterate(d.in)
+    for i in 1:d.p.n
+        y === nothing && return y
+        y = iterate(d.in, y[2])
+    end
+    y
+end
+Base.iterate(d::Apply{I,Drop}, state) where {I} = iterate(d.in, state)
+Base.isdone(d::Apply{I,Drop}, state) where {I} = isdone(d.in, state)

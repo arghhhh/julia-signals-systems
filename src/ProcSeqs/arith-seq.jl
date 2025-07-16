@@ -47,6 +47,14 @@ Base.:-( it , sys::Processors.abstract_processor ) = Arith_SeqProc{-}( Sequences
 Base.:*( it , sys::Processors.abstract_processor ) = Arith_SeqProc{*}( Sequences.sequence(it), sys )
 Base.:/( it , sys::Processors.abstract_processor ) = Arith_SeqProc{/}( Sequences.sequence(it), sys )
 
+# these disambiguate: 
+#    eg Processors.Identity() + Sequences.triangular_dither
+Base.:+( it::Sequences.abstract_sequence , sys::Processors.abstract_processor ) = Arith_SeqProc{+}( Sequences.sequence(it), sys )
+Base.:-( it::Sequences.abstract_sequence , sys::Processors.abstract_processor ) = Arith_SeqProc{-}( Sequences.sequence(it), sys )
+Base.:*( it::Sequences.abstract_sequence , sys::Processors.abstract_processor ) = Arith_SeqProc{*}( Sequences.sequence(it), sys )
+Base.:/( it::Sequences.abstract_sequence , sys::Processors.abstract_processor ) = Arith_SeqProc{/}( Sequences.sequence(it), sys )
+
+
 
 
 Base.IteratorSize( ::Type{Processors.Apply{I,Arith_SeqProc{OP,It,Sys}}}) where {I, OP, It, Sys} = Base.IteratorSize( Sequences.BinaryOp{OP, It, Processors.Apply{I,Sys} } )
@@ -74,6 +82,13 @@ Base.:+( sys::Processors.abstract_processor, it ) = Arith_ProcSeq{+}( sys, Seque
 Base.:-( sys::Processors.abstract_processor, it ) = Arith_ProcSeq{-}( sys, Sequences.sequence(it) )
 Base.:*( sys::Processors.abstract_processor, it ) = Arith_ProcSeq{*}( sys, Sequences.sequence(it) )
 Base.:/( sys::Processors.abstract_processor, it ) = Arith_ProcSeq{/}( sys, Sequences.sequence(it) )
+
+# these disambiguate: 
+#    eg Processors.Identity() + Sequences.triangular_dither
+Base.:+( sys::Processors.abstract_processor, it::Sequences.abstract_sequence ) = Arith_ProcSeq{+}( sys, Sequences.sequence(it) )
+Base.:-( sys::Processors.abstract_processor, it::Sequences.abstract_sequence ) = Arith_ProcSeq{-}( sys, Sequences.sequence(it) )
+Base.:*( sys::Processors.abstract_processor, it::Sequences.abstract_sequence ) = Arith_ProcSeq{*}( sys, Sequences.sequence(it) )
+Base.:/( sys::Processors.abstract_processor, it::Sequences.abstract_sequence ) = Arith_ProcSeq{/}( sys, Sequences.sequence(it) )
 
 
 Base.IteratorSize( ::Type{Processors.Apply{I,Arith_ProcSeq{OP,Sys,It}}}) where {I, OP, It, Sys} = Base.IteratorSize( Sequences.BinaryOp{OP, Processors.Apply{I,Sys}, It } )
