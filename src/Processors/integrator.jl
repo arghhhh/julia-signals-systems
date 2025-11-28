@@ -1,5 +1,6 @@
 
-struct Integrator <: abstract_processor
+# made this mutable, for testing processorRef stuff:
+mutable struct Integrator <: abstract_processor
 	# include any parameters, but not state here:
 	gain
 end
@@ -8,8 +9,13 @@ end
 Base.IteratorEltype(::Type{Apply{I,Integrator}}) where {I} = Base.IteratorEltype(I)
 Base.IteratorSize(  ::Type{Apply{I,Integrator}}) where {I} = Base.IteratorSize(I)
 
+# eltype operates at the type level - returns iterator element type for the given iterator type
+# this should really promote from input and type of gain
+Base.eltype( ::Type{Apply{I,Integrator}}) where {I} = Base.eltype(I)
+
 # functions dependent on the instance:
-Base.eltype( a::Apply{I,Integrator}) where {I} = Base.eltype(a.in)
+
+
 Base.length( a::Apply{I,Integrator}) where {I} = Base.length(a.in)
 Base.size(   a::Apply{I,Integrator}) where {I} = Base.size(  a.in)
 

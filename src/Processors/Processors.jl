@@ -3,6 +3,8 @@
 module Processors
 
 include( "processor.jl" )
+include( "processorRef.jl" )
+
 include( "take.jl" )
 include( "resample.jl" )
 include( "vectorize.jl") 
