@@ -20,4 +20,6 @@ include( "sample-processor-arith.jl" )
 include( "id.jl" )
 include( "repeated.jl" )
 
+include( "stateful.jl" )
+
 end
