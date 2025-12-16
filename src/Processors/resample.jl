@@ -70,6 +70,7 @@ end
 Base.IteratorSize( ::Type{Apply{T_iter,Upsample}} ) where { T_iter } = Base.IteratorSize(T_iter ) 
 Base.eltype( a::Type{Apply{T_iter,Upsample}} ) where { T_iter } = Base.eltype( T_iter )
 Base.length( a::Apply{T_iter,Upsample} ) where { T_iter } = length(a.in) * a.p.n
+Base.size( a::Apply{T_iter,Upsample} ) where { T_iter } = (length(a.in) * a.p.n,)
 
 
 function Base.iterate( a::Apply{T_iter,Upsample} ) where { T_iter }
@@ -112,6 +113,7 @@ end
 Base.IteratorSize( ::Type{Apply{T_iter,Upsamplehold}} ) where { T_iter } = Base.IteratorSize(T_iter ) 
 Base.eltype( a::Type{Apply{T_iter,Upsamplehold}} ) where { T_iter } = Base.eltype( T_iter )
 Base.length( a::Apply{T_iter,Upsamplehold} ) where { T_iter } = length(a.in) * a.p.n
+Base.size( a::Apply{T_iter,Upsamplehold} ) where { T_iter } = (length(a.in) * a.p.n,)
 
 function Base.iterate( a::Apply{T_iter,Upsamplehold} ) where { T_iter }
 
