@@ -145,6 +145,8 @@ function estimate_ac_windowed( v, w )
     # w is the window - same length as v (not just the coefficients)
     # this returns approx 0.707 for sin(x)
     n_samples = length(v)
+
+    # following line - BUG?  should calculate from w, not from default
     return sqrt( sum( w.*w.*v.*v ) / ( Windows.window_power_gain( n_samples, Windows.default_window_coeffs ) ) )
 end
 
