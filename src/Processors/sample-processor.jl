@@ -24,7 +24,11 @@ end
 
 
 # functions dependent on the type only
-Base.IteratorEltype(::Type{Apply{I,P}}) where {I,P<:SampleProcessor} = Base.IteratorEltype(I)
+# Base.IteratorEltype(::Type{Apply{I,P}}) where {I,P<:SampleProcessor} = Base.IteratorEltype(I)
+Base.IteratorEltype(::Type{Apply{I,P}}) where {I,P<:SampleProcessor} = Base.EltypeUnknown()
+
+ 
+
 Base.IteratorSize(  ::Type{Apply{I,P}}) where {I,P<:SampleProcessor} = Base.IteratorSize(I)
 
 # functions dependent on the instance:

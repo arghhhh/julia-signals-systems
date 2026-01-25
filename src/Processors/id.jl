@@ -64,6 +64,15 @@ end
 process( p::Mapa, x, state=nothing ) = p.Fn(x),state
 Base.eltype( ::Type{ Apply{I,Mapa{Fn}} }) where {I,Fn} = Fn( Base.eltype(I) )
 
+# version that explicitly gives the output type:
+struct Mapb{Fn,Tout} <: SampleProcessor
+end
+process( p::Mapb{Fn,Tout}, x, state=nothing ) where {Fn,Tout} = Tout(Fn(x)),state
+Base.IteratorEltype( ::Type{ Apply{I,Mapb{Fn,Tout}} } ) where {I,Fn,Tout} = Base.HasEltype()
+Base.eltype( ::Type{ Apply{I,Mapb{Fn,Tout}} } ) where {I,Fn,Tout} = Tout
+
+
+
 
 # this is a simple implementation of an FIR filter
 # it moves the delay line contents every sample (ie not efficient)
