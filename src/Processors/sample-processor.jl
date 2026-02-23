@@ -18,6 +18,11 @@
 
 
 
+# TODO:
+# look into allowing having a single function for both initial sample and subsequent samples
+# have a default implementation of two argument process( ) that calls the three argument version with state=nothing
+# - if this can be done efficiently, then it removes a lot of cut'n'paste duplication - eg in carfac model
+
 
 abstract type SampleProcessor <: abstract_processor
 end
